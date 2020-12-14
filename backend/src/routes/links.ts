@@ -3,6 +3,11 @@ import  linksController from '../controllers/links'
 
 const router = Router();
 
+
+router.get('/links', (req, res) => {
+    res.json({Message: 'hello people'})
+});
+
 router.post('/links', linksController.postLink);
 
 router.get('/links/:code', linksController.hitLink);

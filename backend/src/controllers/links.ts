@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import { Link } from './../models/link';
-
-const links: Link[] = [];
-let proxId = 1;
+import linksRepository from '../repositoryes/link'
 
 function generateLinkCode(){
     let text = '';
@@ -13,18 +11,22 @@ function generateLinkCode(){
     return text;
 };
 
-function postLink(req: Request, res: Response) {
+async function postLink(req: Request, res: Response) {
     const link = req.body as Link;
-    link.id = proxId++;
     link.hits = 0;
     link.code = generateLinkCode();
-    links.push(link);
+
+    const result = await linksRepository.add(link);
+
+    if (!result) return res.sendStatus(400);
+
+    link.id = result.id!;
     res.status(201).json(link);
 };
 
-function getLink(req: Request, res: Response) {
+async function getLink(req: Request, res: Response) {
     const code = req.params.code as string;
-    const link = links.find(item => item.code === code);
+    const link = await linksRepository.findByCode(code);
 
     if (!link) 
         res.sendStatus(404);
@@ -32,16 +34,14 @@ function getLink(req: Request, res: Response) {
         res.status(200).json(link);
 };
 
-function hitLink(req: Request, res: Response) {
+async function hitLink(req: Request, res: Response) {
     const code = req.params.code as string;
-    const index = links.findIndex(item => item.code === code);
+    const link = await linksRepository.hit(code);
 
-    if (index === -1)
+    if (!link)
         res.sendStatus(404);
     else
-        links[index].hits!++;
-        res.status(200).json(links[index]);
-    
+        res.status(200).json(link);
 };
 
 export default { postLink, getLink, hitLink };
